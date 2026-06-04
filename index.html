@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GEO Visibility Analyzer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f3; --bg3: #ebebea;
+    --text: #1a1a18; --text2: #6b6b68; --text3: #9b9b98;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+    --purple: #534AB7; --purple-light: #EEEDFE; --purple-dark: #3C3489;
+    --teal: #1D9E75; --amber: #BA7517; --red: #E24B4A;
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+  .container { max-width: 760px; margin: 0 auto; }
+
+  .hero { margin-bottom: 2rem; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--purple-light); color: var(--purple-dark); font-size: 12px; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; }
+  .hero h1 { font-size: 28px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .hero p { font-size: 15px; color: var(--text2); line-height: 1.6; }
+
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+
+  .input-group { margin-bottom: 1rem; }
+  .input-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; }
+  input[type=text] { width: 100%; padding: 9px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius-md); font-size: 14px; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.15s; }
+  input[type=text]:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(83,74,183,0.1); }
+  input[type=text]::placeholder { color: var(--text3); }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .run-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 28px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .run-btn:hover { background: var(--purple-dark); }
+  .run-btn:active { transform: scale(0.98); }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results { margin-top: 1.5rem; }
+  .summary-box { background: var(--purple-light); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 14px; color: var(--purple-dark); line-height: 1.65; border-left: 3px solid var(--purple); }
+
+  .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .score-card { background: var(--bg2); border-radius: var(--radius-md); padding: 14px 16px; }
+  .sc-brand { font-size: 12px; color: var(--text2); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sc-num { font-size: 28px; font-weight: 600; line-height: 1; }
+  .sc-label { font-size: 11px; margin-top: 4px; }
+  .c-high { color: var(--teal); }
+  .c-mid { color: var(--amber); }
+  .c-low { color: var(--red); }
+
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 10px; }
+
+  .query-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .query-q { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 12px; display: flex; gap: 8px; align-items: flex-start; }
+  .q-icon { color: var(--text3); flex-shrink: 0; margin-top: 1px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .bar-name { font-size: 12px; color: var(--text2); width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 7px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.7s ease; }
+  .fill-primary { background: var(--purple); }
+  .fill-comp { background: var(--bg3); border: 0.5px solid var(--border2); }
+  .bar-pct { font-size: 12px; color: var(--text2); width: 32px; text-align: right; flex-shrink: 0; }
+  .query-insight { font-size: 12px; color: var(--text2); margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); line-height: 1.5; }
+
+  .rec-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+  .rec-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .rec-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+  .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--purple); flex-shrink: 0; margin-top: 5px; }
+  .rec-text { font-size: 13px; color: var(--text2); line-height: 1.55; }
+
+  .loading-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; text-align: center; color: var(--text2); font-size: 14px; }
+  .loading-spinner { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+
+  .error-box { background: #FCEBEB; border: 0.5px solid #F09595; border-radius: var(--radius-md); padding: 12px 16px; font-size: 13px; color: #A32D2D; margin-top: 1rem; }
+
+  .you-tag { font-size: 10px; font-weight: 600; background: var(--purple-light); color: var(--purple-dark); padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+
+  .footer { text-align: center; margin-top: 2.5rem; font-size: 12px; color: var(--text3); }
+  .footer a { color: var(--purple); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-badge"><i class="ti ti-radar"></i> GEO / AEO intelligence</div>
+    <h1>GEO visibility analyzer</h1>
+    <p>Simulate how your brand shows up in AI-generated search answers — and see exactly where competitors are beating you.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Configure your analysis</div>
+
+    <div class="input-group">
+      <label class="input-label" for="brand">Your brand / company name</label>
+      <input type="text" id="brand" placeholder="e.g. Writesonic" />
+    </div>
+
+    <div class="input-group">
+      <label class="input-label" for="competitors">Competitor names (comma-separated)</label>
+      <input type="text" id="competitors" placeholder="e.g. Jasper, Copy.ai, Surfer SEO" />
+    </div>
+
+    <div class="input-row input-group">
+      <div>
+        <label class="input-label" for="industry">Industry / category</label>
+        <input type="text" id="industry" placeholder="e.g. AI content tools" />
+      </div>
+      <div>
+        <label class="input-label" for="persona">Target buyer persona</label>
+        <input type="text" id="persona" placeholder="e.g. B2B marketers" />
+      </div>
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="runAnalysis()">
+      <i class="ti ti-radar"></i> Analyze GEO visibility
+    </button>
+
+    <div id="errorArea"></div>
+  </div>
+
+  <div id="resultsArea"></div>
+
+  <div class="footer">Built by <a href="https://shanitnagre.github.io" target="_blank">Shanit Nagre</a> · AI PM Portfolio</div>
+</div>
+
+<script>
+async function runAnalysis() {
+  const brand = document.getElementById('brand').value.trim();
+  const competitors = document.getElementById('competitors').value.trim();
+  const industry = document.getElementById('industry').value.trim();
+  const persona = document.getElementById('persona').value.trim();
+  const errorArea = document.getElementById('errorArea');
+
+  errorArea.innerHTML = '';
+
+  if (!brand || !competitors || !industry) {
+    errorArea.innerHTML = '<div class="error-box"><i class="ti ti-alert-circle"></i> Please fill in brand, competitors, and industry.</div>';
+    return;
+  }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+
+  const compList = competitors.split(',').map(c => c.trim()).filter(Boolean);
+  const allBrands = [brand, ...compList];
+
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      Running AI search simulations across 5 real B2B queries...
+    </div>`;
+
+  const scoresJson = allBrands.map(b => `"${b}": <integer 0-100>`).join(', ');
+
+  const prompt = `You are a GEO (Generative Engine Optimization) analyst simulating how brands appear in AI search answers.
+
+Primary brand: "${brand}"
+Competitors: ${compList.join(', ')}
+Industry: ${industry}
+Buyer persona: ${persona || 'B2B buyers'}
+
+Return ONLY valid JSON, no markdown, no preamble:
+{
+  "queries": [
+    {
+      "query": "realistic question a ${persona || 'B2B buyer'} would ask an AI assistant about ${industry}",
+      "scores": { ${scoresJson} },
+      "insight": "one sentence explaining the score differences"
+    }
+  ],
+  "recommendations": ["specific action 1", "specific action 2", "specific action 3"],
+  "summary": "2-sentence executive summary of ${brand}'s AI search presence vs competitors"
+}
+
+Rules:
+- Generate exactly 5 queries
+- Scores must be varied and realistic (brand may underperform competitors on some queries)
+- Recommendations must be specific to ${brand} and GEO/AEO strategy
+- Return only raw JSON`;
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await resp.json();
+    const raw = data.content.map(i => i.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    renderResults(result, brand, compList);
+  } catch(e) {
+    document.getElementById('resultsArea').innerHTML = '';
+    errorArea.innerHTML = '<div class="error-box"><i class="ti ti-alert-circle"></i> Analysis failed. Please try again.</div>';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-refresh"></i> Re-analyze';
+}
+
+function scoreColor(s) {
+  if (s >= 65) return 'c-high';
+  if (s >= 40) return 'c-mid';
+  return 'c-low';
+}
+function scoreLabel(s) {
+  if (s >= 65) return 'Strong presence';
+  if (s >= 40) return 'Moderate presence';
+  return 'Low presence';
+}
+
+function renderResults(data, brand, compList) {
+  const allBrands = [brand, ...compList];
+  const avgScores = {};
+  allBrands.forEach(b => {
+    const vals = data.queries.map(q => (q.scores[b] || 0));
+    avgScores[b] = Math.round(vals.reduce((a,v) => a+v, 0) / vals.length);
+  });
+
+  const scoreCards = allBrands.map((b, i) => `
+    <div class="score-card">
+      <div class="sc-brand">${b}${i === 0 ? '<span class="you-tag">you</span>' : ''}</div>
+      <div class="sc-num ${scoreColor(avgScores[b])}">${avgScores[b]}</div>
+      <div class="sc-label ${scoreColor(avgScores[b])}">${scoreLabel(avgScores[b])}</div>
+    </div>`).join('');
+
+  const queryCards = data.queries.map(q => {
+    const bars = allBrands.map((b, i) => {
+      const s = q.scores[b] || 0;
+      return `
+        <div class="bar-row">
+          <span class="bar-name">${b}</span>
+          <div class="bar-track"><div class="bar-fill ${i === 0 ? 'fill-primary' : 'fill-comp'}" style="width:${s}%"></div></div>
+          <span class="bar-pct">${s}</span>
+        </div>`;
+    }).join('');
+    return `
+      <div class="query-card">
+        <div class="query-q"><i class="ti ti-message-2 q-icon"></i>${q.query}</div>
+        ${bars}
+        <div class="query-insight">${q.insight}</div>
+      </div>`;
+  }).join('');
+
+  const recItems = data.recommendations.map(r => `
+    <div class="rec-item"><div class="rec-dot"></div><div class="rec-text">${r}</div></div>`).join('');
+
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="results">
+      <div class="summary-box">${data.summary}</div>
+
+      <div class="section-label">Average AI visibility score (0–100)</div>
+      <div class="score-grid">${scoreCards}</div>
+
+      <div class="section-label" style="margin-top:1.5rem;">Query-level breakdown</div>
+      ${queryCards}
+
+      <div class="rec-card" style="margin-top:1.5rem;">
+        <div class="rec-title"><i class="ti ti-bulb" style="color:var(--purple);"></i> Recommendations for ${brand}</div>
+        ${recItems}
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>
